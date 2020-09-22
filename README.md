@@ -4,7 +4,7 @@ Reconstruir modulos de node
 ```
 npm install
 ```
-Generar el dist
+Generar el dist (typescript)
 ```
 tsc -w
 ```
