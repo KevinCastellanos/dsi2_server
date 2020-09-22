@@ -41,7 +41,14 @@ export class UsuariosListas {
         return this.lista.filter(usuario => usuario.sala === salaNombre);
     }
 
-    // borrar usuario del chat
+
+    public eliminarultimousuario ()
+     {
+         
+     }    
+
+
+    // borrar usuario del 
     public borrarUsuario(id: string) {
         const tempUsuario = this.getUsuario(id);
         this.lista = this.lista.filter(usuario => usuario.id !== id);
