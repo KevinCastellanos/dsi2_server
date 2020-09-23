@@ -2,9 +2,13 @@
 import { Router, Request, Response } from 'express';
 import Server from '../class/server';
 import { usuarioConectados } from '../sockets/socket';
+import * as mysql from '../database/sql';
+
 
 //exportamos la constante router
 export const router  = Router();
+
+
 
 router.get('/mensajes', (req: Request, res: Response) => {
     res.json({
@@ -86,11 +90,26 @@ router.get('/usuarios', (req: Request, res: Response) => {
     });
 });
 
-// obtener usuarios y sus nombres
-router.get('/usuarios/detalle', (req: Request, res: Response) => {
+// obtenemos los nombre de los departamenos sin filtro
+router.get('/obtener-departamentos', (req: Request, res: Response) => {
+    
+    const consultaSQL = `SELECT *
+                        FROM DEPARTAMENTO;`;
 
-    res.json({
-        ok: true,
-        clientes: usuarioConectados.getLista()
-    });
+        mysql.query(consultaSQL).then( (data: any) => {
+            // data: retorna un array de objetos (si tiene objetos sino mandara un array vacio)
+
+
+            // respondemos al cliente
+            res.json(data);
+        
+        }).catch( (err) => {
+
+            // respondemos al cliente
+            res.status(500).json({ 
+                err 
+            });
+        });
+    
 });
+
