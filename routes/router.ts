@@ -100,12 +100,12 @@ router.get('/obtener-departamentos', (req: Request, res: Response) => {
             // data: retorna un array de objetos (si tiene objetos sino mandara un array vacio)
 
 
-            // respondemos al cliente
+            // respondemos al cliente si es exito
             res.json(data);
         
-        }).catch( (err) => {
+        }).catch( (err: any) => {
 
-            // respondemos al cliente
+            // respondemos al cliente que hay error
             res.status(500).json({ 
                 err 
             });
@@ -113,3 +113,27 @@ router.get('/obtener-departamentos', (req: Request, res: Response) => {
     
 });
 
+//Api Login
+router.post('/login', (req: Request, res: Response) => {
+    console.log(req.query);
+    let consultaSQL = `SELECT * 
+                    FROM USUARIO 
+                    WHERE NOMBRE = '${req.query.usuario}'
+                    AND CONTRASEÑA = '${req.query.password}';`;
+
+    // consulta estructurada con promesas
+    mysql.query(consultaSQL).then( (data: any) => {
+        res.json(data[0]);
+    }).catch( (err) => {
+        res.status(500).json({ err });
+    });
+});
+
+// obtener usuarios y sus nombres
+router.get('/usuarios/detalle', (req: Request, res: Response) => {
+
+    res.json({
+        ok: true,
+        clientes: usuarioConectados.getLista()
+    });
+});
