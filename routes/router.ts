@@ -115,11 +115,16 @@ router.get('/obtener-departamentos', (req: Request, res: Response) => {
 
 //Api Login
 router.post('/login', (req: Request, res: Response) => {
-    console.log(req.query);
+    console.log(req.body);
+
+    // query: viene concatenado en la url
+    // body: los parametros no vienen en la url
+    
+
     let consultaSQL = `SELECT * 
                     FROM USUARIO 
-                    WHERE NOMBRE = '${req.query.usuario}'
-                    AND CONTRASEÑA = '${req.query.password}';`;
+                    WHERE NOMBRE = '${req.body.usuario}'
+                    AND CONTRASEÑA = '${req.body.password}';`;
 
     // consulta estructurada con promesas
     mysql.query(consultaSQL).then( (data: any) => {
