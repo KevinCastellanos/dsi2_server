@@ -142,3 +142,69 @@ router.get('/usuarios/detalle', (req: Request, res: Response) => {
         clientes: usuarioConectados.getLista()
     });
 });
+
+// api obtener detalle abono
+router.post('/obtener-abonos-cliente', (req: Request, res: Response) => {
+    
+    // NOTA: esta consulta sql está estructurada para leer datos de 3 tablas diferentes
+    // tabla a: independiente = es la tabla de expediente
+    // tabla b: independiente = es la tabla pago
+    // tabla c: dependiente = es la tabla detallepago que une datos entre a y c
+    
+    const consultaSQL = `SELECT a.*, b.*,
+                                        (
+                                            (
+                                                select JSON_ARRAYAGG(
+                                                           json_object( 'IDDETALLEPAGO',c.IDDETALLEPAGO,
+                                                                        'FECHAPAGO',c.FECHAPAGO,
+                                                                        'ABONO',c.ABONO,
+                                                                        'SALDO',c.SALDO )
+                                                )   
+                                                from DETALLEPAGOS as c
+                                                where c.IDPAGO = b.IDPAGO
+                                                
+                                            )
+                                         ) as 'detalle'
+                        FROM EXPEDIENTE a, PAGO b
+                        WHERE a.IDEXPEDIENTE = ${req.body.id_expediente};`;
+
+        mysql.query(consultaSQL).then( (data: any) => {
+            // data: retorna un array de objetos (si tiene objetos sino mandara un array vacio)
+            // respondemos al cliente si es exito
+
+            // mysql retorna un arreglo dentro de otro arreglo el ultimo lo retorna en forma de cadena
+            // para eso vamos a convertirlo a un objeto json (este es un caso especial cuando ocupamos unicamente json_arrayg)
+            for (var i = 0; i < data.length; i++) {
+                // parseamos el array que recibimos en cadena a objeto y lo volvemos a asignar a la misma variable
+                data[i].detalle = JSON.parse(data[i].detalle);
+            }
+
+            // retornamos solo el objeto para mayor facilidad de manipulacion de datos
+            res.json(data[0]);
+        
+        }).catch( (err: any) => {
+
+            // respondemos al cliente que hay error
+            res.status(500).json({ 
+                err 
+            });
+        });
+    
+});
+
+// api para registrar abno de cliente
+router.post('/registrar-abono-cliente', (req: Request, res: Response) => {
+    // query: viene concatenado en la url
+    // body: los parametros no vienen en la url
+    
+
+    let consultaSQL =  `INSERT INTO DETALLEPAGOS (IDPAGO ,IDEXPEDIENTE, FECHAPAGO, ABONO, SALDO) 
+                        VALUES (${req.body.id_pago}, ${req.body.id_expediente}, '${req.body.fecha}', ${req.body.abono}, ${req.body.saldo});`;
+
+    // consulta estructurada con promesas
+    mysql.query(consultaSQL).then( (data: any) => {
+        res.json(data);
+    }).catch( (err) => {
+        res.status(500).json({ err });
+    });
+});
