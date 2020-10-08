@@ -134,7 +134,8 @@ exports.router.post('/obtener-abonos-cliente', (req, res) => {
                                                                     'FECHAPAGO',c.FECHAPAGO,
                                                                     'ABONO',c.ABONO,
                                                                     'SALDO',c.SALDO,
-                                                                                    'MONTO', b.MONTO )
+                                                                    'MONTO', b.MONTO,
+                                                                    'IDPAGO', b.IDPAGO )
                                             )   
                                             from DETALLEPAGOS as c, PAGO b
                                             where c.IDPAGO = b.IDPAGO
