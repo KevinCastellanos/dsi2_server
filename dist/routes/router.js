@@ -126,22 +126,24 @@ exports.router.post('/obtener-abonos-cliente', (req, res) => {
     // tabla a: independiente = es la tabla de expediente
     // tabla b: independiente = es la tabla pago
     // tabla c: dependiente = es la tabla detallepago que une datos entre a y c
-    const consultaSQL = `SELECT a.*, b.*,
+    const consultaSQL = `SELECT a.*,
+                                    (
                                         (
-                                            (
-                                                select JSON_ARRAYAGG(
-                                                           json_object( 'IDDETALLEPAGO',c.IDDETALLEPAGO,
-                                                                        'FECHAPAGO',c.FECHAPAGO,
-                                                                        'ABONO',c.ABONO,
-                                                                        'SALDO',c.SALDO )
-                                                )   
-                                                from DETALLEPAGOS as c
-                                                where c.IDPAGO = b.IDPAGO
-                                                
-                                            )
-                                         ) as 'detalle'
-                        FROM EXPEDIENTE a, PAGO b
-                        WHERE a.IDEXPEDIENTE = ${req.body.id_expediente};`;
+                                            select JSON_ARRAYAGG(
+                                                       json_object( 'IDDETALLEPAGO',c.IDDETALLEPAGO,
+                                                                    'FECHAPAGO',c.FECHAPAGO,
+                                                                    'ABONO',c.ABONO,
+                                                                    'SALDO',c.SALDO,
+                                                                                    'MONTO', b.MONTO )
+                                            )   
+                                            from DETALLEPAGOS as c, PAGO b
+                                            where c.IDPAGO = b.IDPAGO
+                                            AND a.IDEXPEDIENTE = c.IDEXPEDIENTE
+                                            
+                                        )
+                                     ) as 'detalle'
+                                FROM EXPEDIENTE as a
+                                WHERE a.IDEXPEDIENTE = ${req.body.id_expediente};`;
     mysql.query(consultaSQL).then((data) => {
         // data: retorna un array de objetos (si tiene objetos sino mandara un array vacio)
         // respondemos al cliente si es exito
