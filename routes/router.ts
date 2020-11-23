@@ -228,3 +228,29 @@ router.post('/obtener-clientes', (req: Request, res: Response) => {
     });
 });
 
+// obtenemos los nombre de los departamenos sin filtro
+router.post('/obtener-eventos-agenda', (req: Request, res: Response) => {
+    // enviar al cliente los eventos programando en google calendar
+    const server = Server.instance;
+
+    // respondemos con un json ya sea vacio o con datos
+    res.json(server.eventosGoogleCalendar);
+    
+});
+
+// api para registrar abno de cliente
+router.post('/registrar-rama', (req: Request, res: Response) => {
+    // query: viene concatenado en la url
+    // body: los parametros no vienen en la url
+    const descripcion = req.body.nombreRama;
+
+    let consultaSQL =  `SELECT * FROM INTO RAMA (RADESCRIPCION) 
+                        VALUES ('${descripcion}');`;
+
+    // consulta estructurada con promesas
+    mysql.query(consultaSQL).then( (data: any) => {
+        res.json(data);
+    }).catch( (err) => {
+        res.status(500).json({ err });
+    });
+});

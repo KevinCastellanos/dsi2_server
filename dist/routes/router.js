@@ -134,8 +134,7 @@ exports.router.post('/obtener-abonos-cliente', (req, res) => {
                                                                     'FECHAPAGO',c.FECHAPAGO,
                                                                     'ABONO',c.ABONO,
                                                                     'SALDO',c.SALDO,
-                                                                    'MONTO', b.MONTO,
-                                                                    'IDPAGO', b.IDPAGO )
+                                                                                    'MONTO', b.MONTO )
                                             )   
                                             from DETALLEPAGOS as c, PAGO b
                                             where c.IDPAGO = b.IDPAGO
@@ -187,6 +186,27 @@ exports.router.post('/obtener-clientes', (req, res) => {
         res.json(data);
     }).catch((err) => {
         // caso de error
+        res.status(500).json({ err });
+    });
+});
+// obtenemos los nombre de los departamenos sin filtro
+exports.router.post('/obtener-eventos-agenda', (req, res) => {
+    // enviar al cliente los eventos programando en google calendar
+    const server = server_1.default.instance;
+    // respondemos con un json ya sea vacio o con datos
+    res.json(server.eventosGoogleCalendar);
+});
+// api para registrar abno de cliente
+exports.router.post('/registrar-rama', (req, res) => {
+    // query: viene concatenado en la url
+    // body: los parametros no vienen en la url
+    const descripcion = req.body.nombreRama;
+    let consultaSQL = `SELECT * FROM INTO RAMA (RADESCRIPCION) 
+                        VALUES ('${descripcion}');`;
+    // consulta estructurada con promesas
+    mysql.query(consultaSQL).then((data) => {
+        res.json(data);
+    }).catch((err) => {
         res.status(500).json({ err });
     });
 });
