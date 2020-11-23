@@ -21,13 +21,19 @@ var multer = require('multer');
 // var upload = multer({ dest: 'uploads/' })
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        console.log(req.body);
+        // imprimos los valores que traemos de la api
+        // console.log('datos de formdata');
+        console.log(req.headers);
         //cb(null, './subir');
-        const path = `./subir/${req.body.id_usuario}`;
+        // reestructuramos el path personalizado dependiento del usuario
+        const path = `./uploads/${req.headers.id_usuario}`;
+        // creamos el directorio sino existe
         fs.mkdirSync(path, { recursive: true });
+        //almacenamos el archivo en el subdirectorio del proytecto
         return cb(null, path);
     },
     filename: function (req, file, cb) {
+        // renombramos el archivo al nombre original
         cb(null, file.originalname);
         // aqui vas a guardar la info a la base de datos
         // id_usuario
@@ -236,7 +242,8 @@ exports.router.get('/obtener-etapas', (req, res) => {
 });
 // Single file
 exports.router.post("/api/subir", uploadStorage.any("archivo"), (req, res) => {
-    //res.json(req.body)
+    // console.log('----');
+    // console.log(req.headers)
     //return res.send("Single file");
     //return res.send(req.body);
     res.json({
