@@ -3,9 +3,52 @@ import { Router, Request, Response } from 'express';
 import Server from '../class/server';
 import { usuarioConectados } from '../sockets/socket';
 import * as mysql from '../database/sql';
+import fs from 'fs'
 
+//Agregado por para rama doc
+var multer  = require('multer')
+var upload = multer({ dest: 'uploads/' })
 
-//exportamos la constante router
+const storage = multer.diskStorage({
+    destination: (req:any, file:any, cb:any) => {
+     // const { IDEXPEDIENTE } = req.body.IDEXPEDIENTE;
+     const obj = JSON.parse(JSON.stringify(req.body)); // req.body = [Object: null prototype] { title: 'product' }
+
+     console.log(obj); // { title: 'product' }
+      //const idUsuario=req.body.idUsuario;
+      ///console.log(IDEXPEDIENTE);
+     // cb(null, "uploads/"+idUsuario+'/')
+     // cb(null, "uploads/"+IDEXPEDIENTE+'/')
+      const path = `./uploads/`
+      fs.mkdirSync(path, { recursive: true })
+      return cb(null, path)
+    },
+    filename: (req:any, file:any, cb:any) => {
+      cb(null, file.originalname)
+    },
+  })
+
+  const uploadStorage = multer({ storage: storage })
+
+////Agregado por Carlos Luna**********************************(Inicio)
+const multipart = require('connect-multiparty'); //Agregado a la rama
+//const bodyParser = require(body-bodyParser);
+////Agregado a la rama <-----
+
+////Agregado a la rama <-----
+
+const multiPartMiddleware = multipart({
+	uploadDir:'./subidas'
+});
+/*
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+	extended:true
+}));
+*/
+////Agregado por Carlos Luna**********************************(Fin)
+
+//exportamos la constante router -- Origina de Kevin
 export const router  = Router();
 
 
@@ -215,8 +258,9 @@ router.post('/obtener-clientes', (req: Request, res: Response) => {
     // query: viene concatenado en la url
     // body: los parametros no vienen en la url
 
-    let consultaSQL =  `SELECT a.*, b.IDEXPEDIENTE FROM CLIENTE as a, EXPEDIENTE as b
-                        WHERE a.IDCLIENTE = b.IDCLIENTE`;
+    let consultaSQL =  `SELECT a.*, b.IDEXPEDIENTE, b.IDETAPA, c.ETDESCRIPCION FROM CLIENTE as a, EXPEDIENTE AS b, ETAPA AS c
+                        WHERE a.IDCLIENTE = b.IDCLIENTE
+                        AND b.IDETAPA = c.IDETAPA;`;
 
     // consulta estructurada con promesas
     mysql.query(consultaSQL).then( (data: any) => {
@@ -227,4 +271,48 @@ router.post('/obtener-clientes', (req: Request, res: Response) => {
         res.status(500).json({ err });
     });
 });
+
+// obtenemos los nombre de los departamenos sin filtro
+router.get('/obtener-etapas', (req: Request, res: Response) => {
+    
+    const consultaSQL = `SELECT *
+                        FROM ETAPA;`;
+
+        mysql.query(consultaSQL).then( (data: any) => {
+            // data: retorna un array de objetos (si tiene objetos sino mandara un array vacio)
+
+
+            // respondemos al cliente si es exito
+            res.json(data);
+        
+        }).catch( (err: any) => {
+
+            // respondemos al cliente que hay error
+            res.status(500).json({ 
+                err 
+            });
+        });
+    
+});
+
+// Single file
+router.post("/api/subir", uploadStorage.single("uploads[]"), (req, res) => {
+    //console.log(req.body)
+    //res.json(req.body)
+    //return res.send("Single file");
+    //return res.send(req.body);
+    res.json({
+        'message': 'Fichero subido correctamente!'
+        });
+  })
+
+////Agregado por Carlos Luna**********************************(Inicio)
+//EndPoint to Upload files
+router.post('/api/subir2',multiPartMiddleware, (req,res)=>{
+	res.json({
+	'message': 'Fichero subido correctamente!'
+	});
+});
+////Agregado por Carlos Luna**********************************(Fin)
+
 

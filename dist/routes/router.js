@@ -1,21 +1,71 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.router = void 0;
 // archivo destinado a crear los api Resfull
 const express_1 = require("express");
 const server_1 = __importDefault(require("../class/server"));
 const socket_1 = require("../sockets/socket");
 const mysql = __importStar(require("../database/sql"));
-//exportamos la constante router
+const fs_1 = __importDefault(require("fs"));
+//Agregado por para rama doc
+var multer = require('multer');
+var upload = multer({ dest: 'uploads/' });
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        // const { IDEXPEDIENTE } = req.body.IDEXPEDIENTE;
+        const obj = JSON.parse(JSON.stringify(req.body)); // req.body = [Object: null prototype] { title: 'product' }
+        console.log(obj); // { title: 'product' }
+        //const idUsuario=req.body.idUsuario;
+        ///console.log(IDEXPEDIENTE);
+        // cb(null, "uploads/"+idUsuario+'/')
+        // cb(null, "uploads/"+IDEXPEDIENTE+'/')
+        const path = `./uploads/`;
+        fs_1.default.mkdirSync(path, { recursive: true });
+        return cb(null, path);
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname);
+    },
+});
+const uploadStorage = multer({ storage: storage });
+////Agregado por Carlos Luna**********************************(Inicio)
+const multipart = require('connect-multiparty'); //Agregado a la rama
+//const bodyParser = require(body-bodyParser);
+////Agregado a la rama <-----
+////Agregado a la rama <-----
+const multiPartMiddleware = multipart({
+    uploadDir: './subidas'
+});
+/*
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+    extended:true
+}));
+*/
+////Agregado por Carlos Luna**********************************(Fin)
+//exportamos la constante router -- Origina de Kevin
 exports.router = express_1.Router();
 exports.router.get('/mensajes', (req, res) => {
     res.json({
@@ -134,8 +184,7 @@ exports.router.post('/obtener-abonos-cliente', (req, res) => {
                                                                     'FECHAPAGO',c.FECHAPAGO,
                                                                     'ABONO',c.ABONO,
                                                                     'SALDO',c.SALDO,
-                                                                    'MONTO', b.MONTO,
-                                                                    'IDPAGO', b.IDPAGO )
+                                                                                    'MONTO', b.MONTO )
                                             )   
                                             from DETALLEPAGOS as c, PAGO b
                                             where c.IDPAGO = b.IDPAGO
@@ -179,8 +228,9 @@ exports.router.post('/registrar-abono-cliente', (req, res) => {
 exports.router.post('/obtener-clientes', (req, res) => {
     // query: viene concatenado en la url
     // body: los parametros no vienen en la url
-    let consultaSQL = `SELECT a.*, b.IDEXPEDIENTE FROM CLIENTE as a, EXPEDIENTE as b
-                        WHERE a.IDCLIENTE = b.IDCLIENTE`;
+    let consultaSQL = `SELECT a.*, b.IDEXPEDIENTE, b.IDETAPA, c.ETDESCRIPCION FROM CLIENTE as a, EXPEDIENTE AS b, ETAPA AS c
+                        WHERE a.IDCLIENTE = b.IDCLIENTE
+                        AND b.IDETAPA = c.IDETAPA;`;
     // consulta estructurada con promesas
     mysql.query(consultaSQL).then((data) => {
         // caso de exito
@@ -190,3 +240,36 @@ exports.router.post('/obtener-clientes', (req, res) => {
         res.status(500).json({ err });
     });
 });
+// obtenemos los nombre de los departamenos sin filtro
+exports.router.get('/obtener-etapas', (req, res) => {
+    const consultaSQL = `SELECT *
+                        FROM ETAPA;`;
+    mysql.query(consultaSQL).then((data) => {
+        // data: retorna un array de objetos (si tiene objetos sino mandara un array vacio)
+        // respondemos al cliente si es exito
+        res.json(data);
+    }).catch((err) => {
+        // respondemos al cliente que hay error
+        res.status(500).json({
+            err
+        });
+    });
+});
+// Single file
+exports.router.post("/api/subir", uploadStorage.single("uploads[]"), (req, res) => {
+    //console.log(req.body)
+    //res.json(req.body)
+    //return res.send("Single file");
+    //return res.send(req.body);
+    res.json({
+        'message': 'Fichero subido correctamente!'
+    });
+});
+////Agregado por Carlos Luna**********************************(Inicio)
+//EndPoint to Upload files
+exports.router.post('/api/subir2', multiPartMiddleware, (req, res) => {
+    res.json({
+        'message': 'Fichero subido correctamente!'
+    });
+});
+////Agregado por Carlos Luna**********************************(Fin)
