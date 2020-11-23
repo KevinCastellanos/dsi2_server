@@ -3,49 +3,40 @@ import { Router, Request, Response } from 'express';
 import Server from '../class/server';
 import { usuarioConectados } from '../sockets/socket';
 import * as mysql from '../database/sql';
-import fs from 'fs'
+const fs = require('fs');
 
 //Agregado por para rama doc
 var multer  = require('multer')
-var upload = multer({ dest: 'uploads/' })
+// var upload = multer({ dest: 'uploads/' })
 
-const storage = multer.diskStorage({
-    destination: (req:any, file:any, cb:any) => {
-     // const { IDEXPEDIENTE } = req.body.IDEXPEDIENTE;
-     const obj = JSON.parse(JSON.stringify(req.body)); // req.body = [Object: null prototype] { title: 'product' }
-
-     console.log(obj); // { title: 'product' }
-      //const idUsuario=req.body.idUsuario;
-      ///console.log(IDEXPEDIENTE);
-     // cb(null, "uploads/"+idUsuario+'/')
-     // cb(null, "uploads/"+IDEXPEDIENTE+'/')
-      const path = `./uploads/`
-      fs.mkdirSync(path, { recursive: true })
-      return cb(null, path)
+var storage = multer.diskStorage({
+    destination: function (req: any, file: any, cb: any) {
+        console.log(req.body);
+        //cb(null, './subir');
+        const path = `./subir/${req.body.id_usuario}`;
+        fs.mkdirSync(path, { recursive: true });
+        return cb(null, path);
     },
-    filename: (req:any, file:any, cb:any) => {
-      cb(null, file.originalname)
-    },
-  })
+    filename: function (req: any, file: any, cb: any) {
+      
+        cb(null, file.originalname)
+        // aqui vas a guardar la info a la base de datos
+        // id_usuario
 
-  const uploadStorage = multer({ storage: storage })
+        /*let consultaSQL =  `INSERT INTO DETALLEPAGOS (IDPAGO ,IDEXPEDIENTE, FECHAPAGO, ABONO, SALDO) 
+                        VALUES (${req.body.id_pago}, ${req.body.id_expediente}, '${req.body.fecha}', ${req.body.abono}, ${req.body.saldo});`;
 
-////Agregado por Carlos Luna**********************************(Inicio)
-const multipart = require('connect-multiparty'); //Agregado a la rama
-//const bodyParser = require(body-bodyParser);
-////Agregado a la rama <-----
-
-////Agregado a la rama <-----
-
-const multiPartMiddleware = multipart({
-	uploadDir:'./subidas'
+        // consulta estructurada con promesas
+        mysql.query(consultaSQL).then( (data: any) => {
+            
+        }).catch( (err) => {
+            
+        });*/
+    }
 });
-/*
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-	extended:true
-}));
-*/
+
+const uploadStorage = multer({ storage: storage })
+
 ////Agregado por Carlos Luna**********************************(Fin)
 
 //exportamos la constante router -- Origina de Kevin
@@ -296,19 +287,19 @@ router.get('/obtener-etapas', (req: Request, res: Response) => {
 });
 
 // Single file
-router.post("/api/subir", uploadStorage.single("uploads[]"), (req, res) => {
-    //console.log(req.body)
+router.post("/api/subir", uploadStorage.any("archivo"), (req, res) => {
+    
     //res.json(req.body)
     //return res.send("Single file");
     //return res.send(req.body);
     res.json({
         'message': 'Fichero subido correctamente!'
-        });
-  })
+    });
+});
 
 ////Agregado por Carlos Luna**********************************(Inicio)
 //EndPoint to Upload files
-router.post('/api/subir2',multiPartMiddleware, (req,res)=>{
+router.post('/api/subir2', (req,res)=>{
 	res.json({
 	'message': 'Fichero subido correctamente!'
 	});

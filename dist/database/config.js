@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.pool = void 0;
 // conexion a mysql
 const mysql = require('mysql');
 // configuracion de base de datos
