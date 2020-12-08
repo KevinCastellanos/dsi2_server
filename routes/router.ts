@@ -3,9 +3,51 @@ import { Router, Request, Response } from 'express';
 import Server from '../class/server';
 import { usuarioConectados } from '../sockets/socket';
 import * as mysql from '../database/sql';
+const fs = require('fs');
 
+//Agregado por para rama doc
+var multer  = require('multer')
+// var upload = multer({ dest: 'uploads/' })
 
-//exportamos la constante router
+var storage = multer.diskStorage({
+    destination: function (req: any, file: any, cb: any) {
+
+        // imprimos los valores que traemos de la api
+        // console.log('datos de formdata');
+        console.log(req.headers);
+        //cb(null, './subir');
+
+        // reestructuramos el path personalizado dependiento del usuario
+        const path = `./uploads/${req.headers.id_usuario}`;
+
+        // creamos el directorio sino existe
+        fs.mkdirSync(path, { recursive: true });
+
+        //almacenamos el archivo en el subdirectorio del proytecto
+        return cb(null, path);
+    },
+    filename: function (req: any, file: any, cb: any) {
+        
+        // renombramos el archivo al nombre original
+        cb(null, file.originalname)
+        // aqui vas a guardar la info a la base de datos
+        // id_usuario
+
+        /*let consultaSQL =  `INSERT INTO DETALLEPAGOS (IDPAGO ,IDEXPEDIENTE, FECHAPAGO, ABONO, SALDO) 
+                        VALUES (${req.body.id_pago}, ${req.body.id_expediente}, '${req.body.fecha}', ${req.body.abono}, ${req.body.saldo});`;
+
+        // consulta estructurada con promesas
+        mysql.query(consultaSQL).then( (data: any) => {
+        }).catch( (err) => {
+        });*/
+    }
+});
+
+const uploadStorage = multer({ storage: storage })
+
+////Agregado por Carlos Luna**********************************(Fin)
+
+//exportamos la constante router -- Origina de Kevin
 export const router  = Router();
 
 
@@ -215,8 +257,9 @@ router.post('/obtener-clientes', (req: Request, res: Response) => {
     // query: viene concatenado en la url
     // body: los parametros no vienen en la url
 
-    let consultaSQL =  `SELECT a.*, b.IDEXPEDIENTE FROM CLIENTE as a, EXPEDIENTE as b
-                        WHERE a.IDCLIENTE = b.IDCLIENTE`;
+    let consultaSQL =  `SELECT a.*, b.IDEXPEDIENTE, b.IDETAPA, c.ETDESCRIPCION FROM CLIENTE as a, EXPEDIENTE AS b, ETAPA AS c
+                        WHERE a.IDCLIENTE = b.IDCLIENTE
+                        AND b.IDETAPA = c.IDETAPA;`;
 
     // consulta estructurada con promesas
     mysql.query(consultaSQL).then( (data: any) => {
@@ -229,6 +272,7 @@ router.post('/obtener-clientes', (req: Request, res: Response) => {
 });
 
 // obtenemos los nombre de los departamenos sin filtro
+
 router.get('/obtener-eventos-agenda', async (req: Request, res: Response) => {
     console.log('evento calendar');
     // enviar al cliente los eventos programando en google calendar
@@ -296,3 +340,63 @@ router.post('/registrar-avance-expediente', (req: Request, res: Response) => {
         res.status(500).json({ err });
     });
 });
+
+router.get('/obtener-etapas', (req: Request, res: Response) => {
+    
+    const consultaSQL = `SELECT *
+                        FROM ETAPA;`;
+
+        mysql.query(consultaSQL).then( (data: any) => {
+            // data: retorna un array de objetos (si tiene objetos sino mandara un array vacio)
+
+
+            // respondemos al cliente si es exito
+            res.json(data);
+        
+        }).catch( (err: any) => {
+
+            // respondemos al cliente que hay error
+            res.status(500).json({ 
+                err 
+            });
+        });
+    
+});
+
+// Single file
+router.post("/api/subir", uploadStorage.any("archivo"), (req, res) => {
+    // console.log('----');
+    // console.log(req.headers)
+    //return res.send("Single file");
+    //return res.send(req.body);
+    res.json({
+        'message': 'Fichero subido correctamente!'
+    });
+});
+
+////Agregado por Carlos Luna**********************************(Inicio)//
+//To download files
+router.post('/obtener-documento', (req,res)=>{
+
+    let ruta = `./uploads/${req.headers.id_usuario}`;
+
+	res.json({
+	'message': 'Fichero recuperado correctamente!'
+	});
+});
+////Agregado por Carlos Luna**********************************(Fin)
+
+router.post('/descarga',function(req,res,next){
+	let ruta = `./uploads/${req.headers.id_usuario}`;
+	res.sendFile(ruta);
+});
+
+////Agregado por Carlos Luna**********************************(Inicio)//Inutilizable
+//EndPoint to Upload files
+router.post('/api/subir2', (req,res)=>{
+	res.json({
+	'message': 'Fichero subido correctamente!'
+	});
+});
+////Agregado por Carlos Luna**********************************(Fin)
+
