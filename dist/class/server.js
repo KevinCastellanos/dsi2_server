@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -39,6 +48,7 @@ class Server {
         this.io = socket_io_1.default(this.httpServer);
         this.escucharSockets();
         this.leerDatosGmail();
+        console.log('fecha; ', (new Date()).toISOString());
     }
     // patron singleton
     static get instance() {
@@ -70,12 +80,14 @@ class Server {
         });
     }
     leerDatosGmail() {
-        // Load client secrets from a local file.
-        fs.readFile('src/credentials.json', (err, content) => {
-            if (err)
-                return console.log('Error loading client secret file:', err);
-            // Authorize a client with credentials, then call the Google Calendar API.
-            this.authorize(JSON.parse(content), this.listEvents);
+        return __awaiter(this, void 0, void 0, function* () {
+            // Load client secrets from a local file.
+            yield fs.readFile('src/credentials.json', (err, content) => __awaiter(this, void 0, void 0, function* () {
+                if (err)
+                    return console.log('Error loading client secret file:', err);
+                // Authorize a client with credentials, then call the Google Calendar API.
+                yield this.authorize(JSON.parse(content), this.listEvents);
+            }));
         });
     }
     /**
@@ -85,14 +97,16 @@ class Server {
       * @param {function} callback La devolución de llamada para llamar con el cliente autorizado.
       */
     authorize(credentials, callback) {
-        const { client_secret, client_id, redirect_uris } = credentials.installed;
-        const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-        // Check if we have previously stored a token.
-        fs.readFile(this.TOKEN_PATH, (err, token) => {
-            if (err)
-                return this.getAccessToken(oAuth2Client, callback);
-            oAuth2Client.setCredentials(JSON.parse(token));
-            callback(oAuth2Client);
+        return __awaiter(this, void 0, void 0, function* () {
+            const { client_secret, client_id, redirect_uris } = credentials.installed;
+            const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+            // Check if we have previously stored a token.
+            yield fs.readFile(this.TOKEN_PATH, (err, token) => __awaiter(this, void 0, void 0, function* () {
+                if (err)
+                    return this.getAccessToken(oAuth2Client, callback);
+                yield oAuth2Client.setCredentials(JSON.parse(token));
+                callback(oAuth2Client);
+            }));
         });
     }
     /**
@@ -113,48 +127,51 @@ class Server {
         });
         rl.question('Enter the code from that page here: ', (code) => {
             rl.close();
-            oAuth2Client.getToken(code, (err, token) => {
+            oAuth2Client.getToken(code, (err, token) => __awaiter(this, void 0, void 0, function* () {
                 if (err)
                     return console.error('Error retrieving access token', err);
-                oAuth2Client.setCredentials(token);
+                yield oAuth2Client.setCredentials(token);
                 // Store the token to disk for later program executions
-                fs.writeFile(this.TOKEN_PATH, JSON.stringify(token), (err) => {
+                yield fs.writeFile(this.TOKEN_PATH, JSON.stringify(token), (err) => {
                     if (err)
                         return console.error(err);
                     console.log('Token stored to', this.TOKEN_PATH);
                 });
-                callback(oAuth2Client);
-            });
+                yield callback(oAuth2Client);
+            }));
         });
     }
     listEvents(auth) {
-        const calendar = google.calendar({ version: 'v3', auth });
-        calendar.events.list({
-            calendarId: 'primary',
-            timeMin: (new Date()).toISOString(),
-            maxResults: 10,
-            singleEvents: true,
-            orderBy: 'startTime',
-        }, (err, res) => {
-            if (err)
-                return console.log('The API returned an error: ' + err);
-            const events = res.data.items;
-            if (events.length) {
-                console.log('eventos: ');
-                console.log(events);
-                // aqui estoy ocupando el patron singleton
-                const server = Server.instance;
-                //
-                server.eventosGoogleCalendar.push(...events);
-                console.log('Upcoming 10 events:');
-                events.map((event, i) => {
-                    const start = event.start.dateTime || event.start.date;
-                    console.log(`${start} - ${event.summary}`);
-                });
-            }
-            else {
-                console.log('No upcoming events found.');
-            }
+        return __awaiter(this, void 0, void 0, function* () {
+            const calendar = google.calendar({ version: 'v3', auth });
+            yield calendar.events.list({
+                calendarId: 'primary',
+                timeMin: (new Date()).toISOString(),
+                maxResults: 10,
+                singleEvents: true,
+                orderBy: 'startTime',
+            }, (err, res) => {
+                if (err)
+                    return console.log('The API returned an error: ' + err);
+                const events = res.data.items;
+                if (events.length) {
+                    console.log('eventos: ');
+                    // console.log(events);
+                    // aqui estoy ocupando el patron singleton
+                    const server = Server.instance;
+                    //
+                    server.eventosGoogleCalendar = [];
+                    server.eventosGoogleCalendar.push(...events);
+                    console.log('Upcoming 10 events:');
+                    events.map((event, i) => {
+                        const start = event.start.dateTime || event.start.date;
+                        console.log(`${start} - ${event.summary}`);
+                    });
+                }
+                else {
+                    console.log('No upcoming events found.');
+                }
+            });
         });
     }
     // Método para levantar el servidor

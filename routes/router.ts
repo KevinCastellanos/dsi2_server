@@ -229,13 +229,21 @@ router.post('/obtener-clientes', (req: Request, res: Response) => {
 });
 
 // obtenemos los nombre de los departamenos sin filtro
-router.post('/obtener-eventos-agenda', (req: Request, res: Response) => {
+router.get('/obtener-eventos-agenda', async (req: Request, res: Response) => {
+    console.log('evento calendar');
     // enviar al cliente los eventos programando en google calendar
-    const server = Server.instance;
-
-    // respondemos con un json ya sea vacio o con datos
-    res.json(server.eventosGoogleCalendar);
+    const server = Server.instance; 
     
+    console.log('antes de leer datos calendar');
+    setTimeout(function()
+    {
+        res.json(server.eventosGoogleCalendar);
+
+    }, 2000);
+    await server.leerDatosGmail();
+    // respondemos con un json ya sea vacio o con datos
+    
+    console.log('despues de leer calendar');
 });
 
 // api para registrar abno de cliente
@@ -246,6 +254,40 @@ router.post('/registrar-rama', (req: Request, res: Response) => {
 
     let consultaSQL =  `SELECT * FROM INTO RAMA (RADESCRIPCION) 
                         VALUES ('${descripcion}');`;
+
+    // consulta estructurada con promesas
+    mysql.query(consultaSQL).then( (data: any) => {
+        res.json(data);
+    }).catch( (err) => {
+        res.status(500).json({ err });
+    });
+});
+
+router.post('/obtener-historial-expediente', (req: Request, res: Response) => {
+    // query: viene concatenado en la url
+    // body: los parametros no vienen en la url
+
+    let consultaSQL =  `SELECT * FROM HISTORIAL_EXPEDIENTE
+                        WHERE ID_EXPEDIENTE = '${req.body.id_expediente}'`;
+
+    // consulta estructurada con promesas
+    mysql.query(consultaSQL).then( (data: any) => {
+        // caso de exito
+        res.json(data);
+    }).catch( (err) => {
+        // caso de error
+        res.status(500).json({ err });
+    });
+});
+
+// api para registrar avance expediente
+router.post('/registrar-avance-expediente', (req: Request, res: Response) => {
+    // query: viene concatenado en la url
+    // body: los parametros no vienen en la url
+    
+
+    let consultaSQL =  `INSERT INTO HISTORIAL_EXPEDIENTE (ID_EXPEDIENTE, DESCRIPCION, FECHA) 
+                        VALUES (${req.body.id_expediente}, '${req.body.comentario}', '${req.body.fecha}');`;
 
     // consulta estructurada con promesas
     mysql.query(consultaSQL).then( (data: any) => {

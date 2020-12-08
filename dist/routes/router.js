@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -190,12 +199,18 @@ exports.router.post('/obtener-clientes', (req, res) => {
     });
 });
 // obtenemos los nombre de los departamenos sin filtro
-exports.router.post('/obtener-eventos-agenda', (req, res) => {
+exports.router.get('/obtener-eventos-agenda', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('evento calendar');
     // enviar al cliente los eventos programando en google calendar
     const server = server_1.default.instance;
+    console.log('antes de leer datos calendar');
+    setTimeout(function () {
+        res.json(server.eventosGoogleCalendar);
+    }, 2000);
+    yield server.leerDatosGmail();
     // respondemos con un json ya sea vacio o con datos
-    res.json(server.eventosGoogleCalendar);
-});
+    console.log('despues de leer calendar');
+}));
 // api para registrar abno de cliente
 exports.router.post('/registrar-rama', (req, res) => {
     // query: viene concatenado en la url
@@ -203,6 +218,33 @@ exports.router.post('/registrar-rama', (req, res) => {
     const descripcion = req.body.nombreRama;
     let consultaSQL = `SELECT * FROM INTO RAMA (RADESCRIPCION) 
                         VALUES ('${descripcion}');`;
+    // consulta estructurada con promesas
+    mysql.query(consultaSQL).then((data) => {
+        res.json(data);
+    }).catch((err) => {
+        res.status(500).json({ err });
+    });
+});
+exports.router.post('/obtener-historial-expediente', (req, res) => {
+    // query: viene concatenado en la url
+    // body: los parametros no vienen en la url
+    let consultaSQL = `SELECT * FROM HISTORIAL_EXPEDIENTE
+                        WHERE ID_EXPEDIENTE = '${req.body.id_expediente}'`;
+    // consulta estructurada con promesas
+    mysql.query(consultaSQL).then((data) => {
+        // caso de exito
+        res.json(data);
+    }).catch((err) => {
+        // caso de error
+        res.status(500).json({ err });
+    });
+});
+// api para registrar avance expediente
+exports.router.post('/registrar-avance-expediente', (req, res) => {
+    // query: viene concatenado en la url
+    // body: los parametros no vienen en la url
+    let consultaSQL = `INSERT INTO HISTORIAL_EXPEDIENTE (ID_EXPEDIENTE, DESCRIPCION, FECHA) 
+                        VALUES (${req.body.id_expediente}, '${req.body.comentario}', '${req.body.fecha}');`;
     // consulta estructurada con promesas
     mysql.query(consultaSQL).then((data) => {
         res.json(data);

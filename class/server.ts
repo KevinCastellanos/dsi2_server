@@ -42,6 +42,7 @@ export default class Server {
         this.io = socketIO(this.httpServer);
         this.escucharSockets();
         this.leerDatosGmail();
+        console.log('fecha; ', (new Date()).toISOString());
     }
 
     // patron singleton
@@ -80,13 +81,13 @@ export default class Server {
         });
     }
 
-    private leerDatosGmail() {
+    public async leerDatosGmail() {
         
         // Load client secrets from a local file.
-        fs.readFile('src/credentials.json', (err: any, content: any) => {
+        await fs.readFile('src/credentials.json', async (err: any, content: any) => {
             if (err) return console.log('Error loading client secret file:', err);
             // Authorize a client with credentials, then call the Google Calendar API.
-            this.authorize(JSON.parse(content), this.listEvents);
+            await this.authorize(JSON.parse(content), this.listEvents);
         });        
           
     }
@@ -97,16 +98,16 @@ export default class Server {
       * @param {Object} credenciales Las credenciales del cliente de autorización.
       * @param {function} callback La devolución de llamada para llamar con el cliente autorizado.
       */
-    private authorize(credentials: any, callback: any) {
+    public async authorize(credentials: any, callback: any) {
         
         const {client_secret, client_id, redirect_uris} = credentials.installed;
         const oAuth2Client = new google.auth.OAuth2(
               client_id, client_secret, redirect_uris[0]);
 
         // Check if we have previously stored a token.
-        fs.readFile(this.TOKEN_PATH, (err: any, token: any) => {
+        await fs.readFile(this.TOKEN_PATH, async (err: any, token: any) => {
             if (err) return this.getAccessToken(oAuth2Client, callback);
-            oAuth2Client.setCredentials(JSON.parse(token));
+            await oAuth2Client.setCredentials(JSON.parse(token));
             callback(oAuth2Client);
         });
     }
@@ -118,7 +119,7 @@ export default class Server {
     * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
     * @param {getEventsCallback} callback The callback for the authorized client.
     */
-    private getAccessToken(oAuth2Client: any, callback: any) {
+    public getAccessToken(oAuth2Client: any, callback: any) {
         const authUrl = oAuth2Client.generateAuthUrl({
             access_type: 'offline',
             scope: this.SCOPES,
@@ -130,22 +131,23 @@ export default class Server {
         });
         rl.question('Enter the code from that page here: ', (code: any) => {
             rl.close();
-            oAuth2Client.getToken(code, (err: any, token: any) => {
+            oAuth2Client.getToken(code, async (err: any, token: any) => {
               if (err) return console.error('Error retrieving access token', err);
-              oAuth2Client.setCredentials(token);
+              await oAuth2Client.setCredentials(token);
               // Store the token to disk for later program executions
-              fs.writeFile(this.TOKEN_PATH, JSON.stringify(token), (err: any) => {
+              await fs.writeFile(this.TOKEN_PATH, JSON.stringify(token), (err: any) => {
                 if (err) return console.error(err);
                 console.log('Token stored to', this.TOKEN_PATH);
               });
-              callback(oAuth2Client);
+              await callback(oAuth2Client);
             });
         });
     }
 
-    private listEvents(auth: any) {
+
+    private async listEvents(auth: any) {
         const calendar = google.calendar({version: 'v3', auth});
-          calendar.events.list({
+        await calendar.events.list({
             calendarId: 'primary',
             timeMin: (new Date()).toISOString(),
             maxResults: 10,
@@ -156,12 +158,13 @@ export default class Server {
             const events = res.data.items;
             if (events.length) {
                 console.log('eventos: ');
-                console.log(events);
+                // console.log(events);
                 
                 // aqui estoy ocupando el patron singleton
                 const server = Server.instance;
 
                 //
+                server.eventosGoogleCalendar = [];
                 server.eventosGoogleCalendar.push(...events);
                 
                 console.log('Upcoming 10 events:');
@@ -172,7 +175,7 @@ export default class Server {
             } else {
               console.log('No upcoming events found.');
             }
-          });
+        });
     }
 
     // Método para levantar el servidor
