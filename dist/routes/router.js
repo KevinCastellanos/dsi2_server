@@ -1,15 +1,28 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.router = void 0;
 // archivo destinado a crear los api Resfull
 const express_1 = require("express");
 const server_1 = __importDefault(require("../class/server"));
@@ -42,9 +55,7 @@ var storage = multer.diskStorage({
 
         // consulta estructurada con promesas
         mysql.query(consultaSQL).then( (data: any) => {
-            
         }).catch( (err) => {
-            
         });*/
     }
 });
@@ -250,7 +261,20 @@ exports.router.post("/api/subir", uploadStorage.any("archivo"), (req, res) => {
         'message': 'Fichero subido correctamente!'
     });
 });
-////Agregado por Carlos Luna**********************************(Inicio)
+////Agregado por Carlos Luna**********************************(Inicio)//
+//To download files
+exports.router.post('/obtener-documento', (req, res) => {
+    let ruta = `./uploads/${req.headers.id_usuario}`;
+    res.json({
+        'message': 'Fichero recuperado correctamente!'
+    });
+});
+////Agregado por Carlos Luna**********************************(Fin)
+exports.router.post('/descarga', function (req, res, next) {
+    let ruta = `./uploads/${req.headers.id_usuario}`;
+    res.sendFile(ruta);
+});
+////Agregado por Carlos Luna**********************************(Inicio)//Inutilizable
 //EndPoint to Upload files
 exports.router.post('/api/subir2', (req, res) => {
     res.json({

@@ -38,9 +38,7 @@ var storage = multer.diskStorage({
 
         // consulta estructurada con promesas
         mysql.query(consultaSQL).then( (data: any) => {
-            
         }).catch( (err) => {
-            
         });*/
     }
 });
@@ -307,8 +305,24 @@ router.post("/api/subir", uploadStorage.any("archivo"), (req, res) => {
     });
 });
 
+////Agregado por Carlos Luna**********************************(Inicio)//
+//To download files
+router.post('/obtener-documento', (req,res)=>{
 
-////Agregado por Carlos Luna**********************************(Inicio)
+    let ruta = `./uploads/${req.headers.id_usuario}`;
+
+	res.json({
+	'message': 'Fichero recuperado correctamente!'
+	});
+});
+////Agregado por Carlos Luna**********************************(Fin)
+
+router.post('/descarga',function(req,res,next){
+	let ruta = `./uploads/${req.headers.id_usuario}`;
+	res.sendFile(ruta);
+});
+
+////Agregado por Carlos Luna**********************************(Inicio)//Inutilizable
 //EndPoint to Upload files
 router.post('/api/subir2', (req,res)=>{
 	res.json({
