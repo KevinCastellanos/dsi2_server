@@ -14,7 +14,7 @@ var storage = multer.diskStorage({
 
         // imprimos los valores que traemos de la api
         // console.log('datos de formdata');
-        console.log(req.headers);
+        console.log(file);
         //cb(null, './subir');
 
         // reestructuramos el path personalizado dependiento del usuario
@@ -32,14 +32,18 @@ var storage = multer.diskStorage({
         cb(null, file.originalname)
         // aqui vas a guardar la info a la base de datos
         // id_usuario
-
-        /*let consultaSQL =  `INSERT INTO DETALLEPAGOS (IDPAGO ,IDEXPEDIENTE, FECHAPAGO, ABONO, SALDO) 
-                        VALUES (${req.body.id_pago}, ${req.body.id_expediente}, '${req.body.fecha}', ${req.body.abono}, ${req.body.saldo});`;
+        let consultaSQL =  `INSERT INTO DOCUMENTOS (IDCLIENTE , DESCDOCUMENTO, nombreUsuario) 
+                        VALUES (1, '${file.originalname}', '${req.headers.id_usuario}');`;
 
         // consulta estructurada con promesas
         mysql.query(consultaSQL).then( (data: any) => {
         }).catch( (err) => {
-        });*/
+            //alert(err);
+            //console.log(req);
+            
+        });
+        
+        
     }
 });
 
@@ -303,6 +307,8 @@ router.post("/api/subir", uploadStorage.any("archivo"), (req, res) => {
     res.json({
         'message': 'Fichero subido correctamente!'
     });
+
+    
 });
 
 ////Agregado por Carlos Luna**********************************(Inicio)//
@@ -331,4 +337,25 @@ router.post('/api/subir2', (req,res)=>{
 });
 ////Agregado por Carlos Luna**********************************(Fin)
 
+// obtenemos los nombre de los departamenos sin filtro
+router.get('/obtener-departamentos', (req: Request, res: Response) => {
+    
+    const consultaSQL1 = `SELECT B.DESCDOCUMENTO FROM CLIENTE A INNER JOIN DOCUMENTOS B ON CONCAT(A.NOMBRE,' ',A.APELLIDO) = B.nombreUsuario
+    where CONCAT(A.NOMBRE,' ',A.APELLIDO)='${req.headers.id_usuario}'`;
 
+        mysql.query(consultaSQL1).then( (data: any) => {
+            // data: retorna un array de objetos (si tiene objetos sino mandara un array vacio)
+
+
+            // respondemos al cliente si es exito
+            res.json(data);
+        
+        }).catch( (err: any) => {
+
+            // respondemos al cliente que hay error
+            res.status(500).json({ 
+                err 
+            });
+        });
+    
+});
