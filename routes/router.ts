@@ -228,18 +228,25 @@ router.post('/obtener-clientes', (req: Request, res: Response) => {
     });
 });
 
-//Api para registrar expediente
-router.post('/registrar-expediente', (req: Request, res: Response) => {
+
+//Api para registrar cliente y obtener el id del expediente para registrar el expediente
+router.post('/registrar-cliente', (req: Request, res: Response) => {
     // query: viene concatenado en la url
     // body: los parametros no vienen en la url
     
-
-    let consultaSQL =  `INSERT INTO EXPEDIENTE (IDRAMA ,IDCLIENTE, IDETAPA, FECHACREACION, FECHARESOLUCION) 
-                        VALUES (${req.body.id_rama}, ${req.body.id_cliente}, '${req.body.id_etapa}', ${req.body.fecha_creacion}, ${req.body.fecha_resolucion});`;
+    let consultaSQL1 =  `INSERT INTO CLIENTE (NOMBRE ,APELLIDO, DIRECCION, TELEFONO, CORREO, DOCUMENTOPERSONAL, EDAD, PROFESION, FECHANACIMIENTO, ESTADOCIVIL, FECHAINGRESO) 
+    VALUES (${req.body.NOMBRE}, ${req.body.APELLIDO}, '${req.body.DIRECCION}', ${req.body.TELEFONO}, ${req.body.CORREO}, ${req.body.DOCUMENTOPERSONAL}, ${req.body.EDAD}, ${req.body.PROFESION}, ${req.body.FECHANACIMIENTO}, ${req.body.ESTADOCIVIL}, ${req.body.FECHAINGRESO});`;
+    
+    let consultaSQL2 =  `INSERT INTO EXPEDIENTE (IDRAMA ,IDCLIENTE, IDETAPA, FECHACREACION, FECHARESOLUCION) 
+                        VALUES (${req.body.IDRAMA}, ${req.body.IDCLIENTE}, '${req.body.IDETAPA}', ${req.body.FECHACREACION}, ${req.body.FECHARESOLUCION});`;
 
     // consulta estructurada con promesas
-    mysql.query(consultaSQL).then( (data: any) => {
-        res.json(data);
+    mysql.query(consultaSQL1).then( (data: any) => {
+        mysql.query(consultaSQL2).then( (data2: any) => {
+            res.json(data);
+        }).catch( (err) => {
+            res.status(500).json({ err });
+        });
     }).catch( (err) => {
         res.status(500).json({ err });
     });
