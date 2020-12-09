@@ -228,3 +228,53 @@ router.post('/obtener-clientes', (req: Request, res: Response) => {
     });
 });
 
+//Api para registrar expediente
+router.post('/registrar-expediente', (req: Request, res: Response) => {
+    // query: viene concatenado en la url
+    // body: los parametros no vienen en la url
+    
+
+    let consultaSQL =  `INSERT INTO EXPEDIENTE (IDRAMA ,IDCLIENTE, IDETAPA, FECHACREACION, FECHARESOLUCION) 
+                        VALUES (${req.body.id_rama}, ${req.body.id_cliente}, '${req.body.id_etapa}', ${req.body.fecha_creacion}, ${req.body.fecha_resolucion});`;
+
+    // consulta estructurada con promesas
+    mysql.query(consultaSQL).then( (data: any) => {
+        res.json(data);
+    }).catch( (err) => {
+        res.status(500).json({ err });
+    });
+});
+
+//Api para eliminar expediente
+router.post('/eliminar-expediente', (req: Request, res: Response) => {
+    // query: viene concatenado en la url
+    // body: los parametros no vienen en la url
+    
+
+    let consultaSQL =  `DELETE FROM EXPEDIENTE (IDEXPEDIENTE ,IDCLIENTE) 
+                        WHERE IDEXPEDIENTE = (${req.body.id_expediente}, ${req.body.id_cliente});`;
+
+    // consulta estructurada con promesas
+    mysql.query(consultaSQL).then( (data: any) => {
+        res.json(data);
+    }).catch( (err) => {
+        res.status(500).json({ err });
+    });
+});
+
+//Api para editar un expediente
+router.post('/editar-expediente', (req: Request, res: Response) => {
+    // query: viene concatenado en la url
+    // body: los parametros no vienen en la url
+    
+
+    let consultaSQL =  `UPDATE EXPEDIENTE (IDRAMA ,IDCLIENTE, IDETAPA, FECHACREACION, FECHARESOLUCION) 
+                        SET IDEXPEDIENTE = (${req.body.id_rama}, ${req.body.id_cliente}, '${req.body.id_etapa}', ${req.body.fecha_creacion}, ${req.body.fecha_resolucion});`;
+
+    // consulta estructurada con promesas
+    mysql.query(consultaSQL).then( (data: any) => {
+        res.json(data);
+    }).catch( (err) => {
+        res.status(500).json({ err });
+    });
+});
